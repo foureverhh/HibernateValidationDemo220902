@@ -1,7 +1,9 @@
 package se.skolverket.hibernatevalidationdemo.controller;
 
 
+import org.hibernate.annotations.NotFound;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import se.skolverket.hibernatevalidationdemo.service.UserService;
 
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,7 +28,36 @@ public class UserController {
     }
 
     @GetMapping("/customised")
-    public ResponseEntity<Map<String, String>> createUser(@RequestParam("cause") String cause) {
-        throw  new CustomisedException("cause is " + cause);
+    public ResponseEntity<Map<String, String>> customisedException(@RequestParam("cause") String cause) {
+        throw new CustomisedException("cause is " + cause);
+    }
+
+    @GetMapping("/test/{id}")
+    public ResponseEntity<String> return404(@PathVariable("id") Long id) {
+            User user = userService.findUseById(id);
+            return user == null ? new ResponseEntity<>(HttpStatus.NOT_FOUND): new ResponseEntity<>("The id is " + id, HttpStatus.OK);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable("id") Long id) {
+        User user = userService.findUseById(id);
+        return user == null ? new ResponseEntity<>(HttpStatus.NOT_FOUND): new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/users/all")
+    public ResponseEntity<?> getAllUsers() {
+        //sort by name ascending and by job descending
+        List<User> users = userService.findAllWithSort(Sort.by("name").ascending().and(Sort.by("job").descending()));
+        return users == null ? new ResponseEntity<>(HttpStatus.NOT_FOUND): new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    // return default error message, not suitable for Restful api
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST,reason = "Pass number only")
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Map<String, String> testResponseStatus(IllegalArgumentException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put("param illegal", e.getMessage());
+        System.out.println("test Response status is called");
+        return error;
     }
 }
