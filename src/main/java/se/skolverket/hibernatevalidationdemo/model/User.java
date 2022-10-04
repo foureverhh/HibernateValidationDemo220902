@@ -8,13 +8,14 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.util.Comparator;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name ="USERS")
 @Entity
-public class User {
+public class User implements Comparable<User>{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -32,4 +33,11 @@ public class User {
     @NotEmpty
     @Size(min=8, message ="password should have at least 8 characters")
     private String password;
+
+    @Override
+    public int compareTo(User other) {
+        return Comparator.comparing(User::getName)
+                .thenComparing(User::getJob)
+                .compare(this,other);
+    }
 }

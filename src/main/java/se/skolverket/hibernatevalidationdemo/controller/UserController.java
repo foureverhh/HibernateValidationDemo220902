@@ -3,6 +3,8 @@ package se.skolverket.hibernatevalidationdemo.controller;
 
 import org.hibernate.annotations.NotFound;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.support.MutableSortDefinition;
+import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +14,7 @@ import se.skolverket.hibernatevalidationdemo.model.User;
 import se.skolverket.hibernatevalidationdemo.service.UserService;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -44,11 +44,27 @@ public class UserController {
         return user == null ? new ResponseEntity<>(HttpStatus.NOT_FOUND): new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    @GetMapping("/users/all")
-    public ResponseEntity<?> getAllUsers() {
+    @GetMapping("/sort/users/all")
+    public ResponseEntity<?> getAllUsersWithSort() {
         //sort by name ascending and by job descending
         List<User> users = userService.findAllWithSort(Sort.by("name").ascending().and(Sort.by("job").descending()));
         return users == null ? new ResponseEntity<>(HttpStatus.NOT_FOUND): new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/pagedListHolder/users/all")
+    public ResponseEntity<?> getAllUsersWithPagedListHolder(@RequestParam("page")String page, @RequestParam("size")String size, @RequestParam("sort")String sort, @RequestParam("order")String order) {
+        //sort by name ascending and by job descending
+        List<User> users = userService.findAll();
+        Collections.sort(users);
+        PagedListHolder<User> pagedListHolder = new PagedListHolder<>(users);
+        if (order.equals("1"))
+            pagedListHolder.setSort(new MutableSortDefinition(sort, false,true));
+        else
+            pagedListHolder.setSort(new MutableSortDefinition(sort, false,false));
+        pagedListHolder.resort();
+        pagedListHolder.setPage(Integer.parseInt(page));
+        pagedListHolder.setPageSize(Integer.parseInt(size));
+        return new ResponseEntity<>(pagedListHolder, HttpStatus.OK);
     }
 
     // return default error message, not suitable for Restful api

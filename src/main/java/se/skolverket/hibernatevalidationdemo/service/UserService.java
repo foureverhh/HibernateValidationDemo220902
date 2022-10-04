@@ -28,4 +28,8 @@ public class UserService {
     public List<User> findByJobContainingWithSort(String job, Sort sort) {
         return userRepository.findByJobContaining(job, sort);
     }
+
+    public List<User> findAll() {
+        return (List<User>) userRepository.findAll();
+    }
 }
